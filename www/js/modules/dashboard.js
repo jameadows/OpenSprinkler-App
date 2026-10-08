@@ -57,7 +57,18 @@ OSApp.Dashboard.displayPage = function() {
 		getStationBadge = function( sid ) {
 			var badge = OSApp.Stations.getSpecialBadge( sid ),
 				type = OSApp.Stations.getSpecialType( sid ),
+				remoteRuntime = OSApp.Stations.isRemote( sid ) ?
+					OSApp.Stations.getRemoteRuntime( sid ) : undefined,
+				remoteState = remoteRuntime ? Number( remoteRuntime[ 0 ] ) : undefined,
 				leaders;
+
+			// The confirmation indicator identifies current remote stations more usefully than the RS badge.
+			if ( remoteState === OSApp.Constants.stations.REMOTE_STATUS_PENDING ||
+				remoteState === OSApp.Constants.stations.REMOTE_STATUS_CONFIRMED ||
+				remoteState === OSApp.Constants.stations.REMOTE_STATUS_RETRYING ||
+				remoteState === OSApp.Constants.stations.REMOTE_STATUS_FAILED ) {
+				return { text: "", title: "", bundle: false, member: false };
+			}
 
 			if ( badge ) {
 				return {
@@ -106,6 +117,77 @@ OSApp.Dashboard.displayPage = function() {
 			} else {
 				badgeElement.removeAttr( "role tabindex" );
 			}
+		},
+		getRemoteDisplay = function( sid ) {
+			var runtime = OSApp.Stations.isRemote( sid ) ? OSApp.Stations.getRemoteRuntime( sid ) : undefined,
+				prefix = OSApp.Language._( "Remote station" ) + ": ",
+				state, target;
+
+			if ( !runtime ) {
+				return { visible: false, text: "", stateClass: "" };
+			}
+			state = Number( runtime[ 0 ] );
+			target = Number( runtime[ 1 ] ) ? OSApp.Language._( "on" ) : OSApp.Language._( "off" );
+
+			switch ( state ) {
+				case OSApp.Constants.stations.REMOTE_STATUS_PENDING:
+					return {
+						visible: true,
+						text: prefix + OSApp.Language._( "Confirming remote" ) + " " + target + "…",
+						stateClass: "pending"
+					};
+				case OSApp.Constants.stations.REMOTE_STATUS_CONFIRMED:
+					return {
+						visible: true,
+						text: prefix + OSApp.Language._( "Remote confirmed" ) + " " + target,
+						stateClass: "confirmed"
+					};
+				case OSApp.Constants.stations.REMOTE_STATUS_RETRYING:
+					return {
+						visible: true,
+						text: prefix + OSApp.Language._( "Remote state not confirmed; retrying" ),
+						stateClass: "retrying"
+					};
+				case OSApp.Constants.stations.REMOTE_STATUS_FAILED:
+					return {
+						visible: true,
+						text: prefix + OSApp.Language._( "Remote unreachable; retrying in background" ),
+						stateClass: "failed"
+					};
+				default:
+					return { visible: false, text: "", stateClass: "" };
+			}
+		},
+		getRemoteStatusMarkup = function( sid ) {
+			var display = getRemoteDisplay( sid ),
+				text;
+			if ( !display.visible ) {
+				return "";
+			}
+			text = OSApp.Utils.htmlEscape( display.text );
+			return "<span class='remote-station-status " + display.stateClass +
+				"' role='status' aria-live='polite' aria-label='" + text +
+				"' data-tooltip='" + text + "' tabindex='0'>" +
+				"<span class='remote-station-status-icon' aria-hidden='true'></span></span>";
+		},
+		updateRemoteStatus = function( card, sid ) {
+			var display = getRemoteDisplay( sid ),
+				status = card.find( ".remote-station-status" );
+
+			if ( !display.visible ) {
+				status.remove();
+				return;
+			}
+			if ( !status.length ) {
+				status = $( "<span class='remote-station-status' role='status' aria-live='polite' tabindex='0'>" +
+					"<span class='remote-station-status-icon' aria-hidden='true'></span></span>" )
+					.appendTo( card );
+			}
+			status.removeClass( "pending confirmed retrying failed" )
+				.addClass( display.stateClass ).attr( {
+					"aria-label": display.text,
+					"data-tooltip": display.text
+				} );
 		},
 		showBundleInfo = function( heading, details, detailClass, listItems ) {
 			$( "#bundle-active-info" ).popup( "destroy" ).remove();
@@ -241,9 +323,9 @@ OSApp.Dashboard.displayPage = function() {
 					cards += "</p>";
 				}
 			}
-
 			// Add sequential group divider and close current card group
-			cards += "</div><hr style='display:none' class='content-divider'" +
+			cards += "</div>" + getRemoteStatusMarkup( sid ) +
+				"<hr style='display:none' class='content-divider'" +
 				( OSApp.Supported.groups() ? "divider-gid=" + OSApp.Stations.getGIDValue( sid ) : "" ) + "></div>";
 
 		},
@@ -1315,6 +1397,7 @@ OSApp.Dashboard.displayPage = function() {
 					card.find( "#station_" + sid ).text( OSApp.Stations.getName( sid) );
 					updateSpecialBadge( card, sid );
 					card.find( ".station-status" ).removeClass( "on off wait" ).addClass( isRunning ? "on" : ( isScheduled ? "wait" : "off" ) );
+					updateRemoteStatus( card, sid );
 					settingsButton = card.find( ".station-settings" );
 					if ( OSApp.Stations.isMaster( sid ) ) {
 						settingsButton.removeClass( "ui-icon-gear station-group-settings" ).addClass( "ui-icon-master" )
@@ -1493,6 +1576,12 @@ OSApp.Dashboard.displayPage = function() {
 			OSApp.UIDom.changePage( "#os-options", {
 				expandItem: "weather"
 			} );
+			return false;
+		} );
+
+		page.on( "click", ".remote-station-status", function( event ) {
+			event.stopPropagation();
+			this.focus();
 			return false;
 		} );
 
