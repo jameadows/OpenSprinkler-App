@@ -67,7 +67,7 @@ describe("Remote Station Status Checks", function () {
 
 		var card = $("#station_0").closest(".card"),
 			status = card.find(".remote-station-status");
-		assert.equal(status.attr("data-tooltip"), "Remote station: Confirming remote on…");
+		assert.equal(status.attr("data-tooltip"), "Remote station: Confirming valve on…");
 		assert.equal(status.attr("aria-label"), status.attr("data-tooltip"));
 		assert.isTrue(status.hasClass("pending"));
 		assert.equal(status.attr("tabindex"), "0");
@@ -81,8 +81,8 @@ describe("Remote Station Status Checks", function () {
 		controller.remoteStations[0] = [ OSApp.Constants.stations.REMOTE_STATUS_CONFIRMED, 1, 0, 0 ];
 		$("html").trigger("datarefresh");
 		status = card.find(".remote-station-status");
-		assert.equal(status.attr("data-tooltip"), "Remote station: Remote confirmed on");
-		assert.equal(status.attr("aria-label"), "Remote station: Remote confirmed on");
+		assert.equal(status.attr("data-tooltip"), "Remote station: Valve confirmed on");
+		assert.equal(status.attr("aria-label"), "Remote station: Valve confirmed on");
 		assert.isTrue(status.hasClass("confirmed"));
 		assert.isFalse(status.hasClass("pending"));
 	});
@@ -114,6 +114,7 @@ describe("Remote Station Status Checks", function () {
 		var card = $("#station_0").closest(".card");
 		assert.isTrue(card.find(".special-station").hasClass("hidden"));
 		assert.isTrue(card.find(".remote-station-status").hasClass("confirmed"));
+		assert.equal(card.find(".remote-station-status").attr("data-tooltip"), "Remote station: Valve confirmed off");
 	});
 
 	it("remains compatible with firmware that does not report remote status", function () {

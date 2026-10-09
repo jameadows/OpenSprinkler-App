@@ -120,38 +120,41 @@ OSApp.Dashboard.displayPage = function() {
 		},
 		getRemoteDisplay = function( sid ) {
 			var runtime = OSApp.Stations.isRemote( sid ) ? OSApp.Stations.getRemoteRuntime( sid ) : undefined,
-				prefix = OSApp.Language._( "Remote station" ) + ": ",
-				state, target;
+				state, targetOn;
 
 			if ( !runtime ) {
 				return { visible: false, text: "", stateClass: "" };
 			}
 			state = Number( runtime[ 0 ] );
-			target = Number( runtime[ 1 ] ) ? OSApp.Language._( "on" ) : OSApp.Language._( "off" );
+			targetOn = Number( runtime[ 1 ] ) !== 0;
 
 			switch ( state ) {
 				case OSApp.Constants.stations.REMOTE_STATUS_PENDING:
 					return {
 						visible: true,
-						text: prefix + OSApp.Language._( "Confirming remote" ) + " " + target + "…",
+						text: targetOn ?
+							OSApp.Language._( "Remote station: Confirming valve on…" ) :
+							OSApp.Language._( "Remote station: Confirming valve off…" ),
 						stateClass: "pending"
 					};
 				case OSApp.Constants.stations.REMOTE_STATUS_CONFIRMED:
 					return {
 						visible: true,
-						text: prefix + OSApp.Language._( "Remote confirmed" ) + " " + target,
+						text: targetOn ?
+							OSApp.Language._( "Remote station: Valve confirmed on" ) :
+							OSApp.Language._( "Remote station: Valve confirmed off" ),
 						stateClass: "confirmed"
 					};
 				case OSApp.Constants.stations.REMOTE_STATUS_RETRYING:
 					return {
 						visible: true,
-						text: prefix + OSApp.Language._( "Remote state not confirmed; retrying" ),
+						text: OSApp.Language._( "Remote station: Remote state not confirmed; retrying" ),
 						stateClass: "retrying"
 					};
 				case OSApp.Constants.stations.REMOTE_STATUS_FAILED:
 					return {
 						visible: true,
-						text: prefix + OSApp.Language._( "Remote unreachable; retrying in background" ),
+						text: OSApp.Language._( "Remote station: Remote unreachable; retrying in background" ),
 						stateClass: "failed"
 					};
 				default:

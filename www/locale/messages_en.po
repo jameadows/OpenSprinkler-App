@@ -2754,22 +2754,22 @@ msgstr ""
 msgid "Firmware update requires a local network connection to the controller."
 msgstr ""
 
-msgid "Remote station"
+msgid "Remote station: Confirming valve on…"
 msgstr ""
 
-msgid "off"
+msgid "Remote station: Confirming valve off…"
 msgstr ""
 
-msgid "Confirming remote"
+msgid "Remote station: Valve confirmed on"
 msgstr ""
 
-msgid "Remote confirmed"
+msgid "Remote station: Valve confirmed off"
 msgstr ""
 
-msgid "Remote state not confirmed; retrying"
+msgid "Remote station: Remote state not confirmed; retrying"
 msgstr ""
 
-msgid "Remote unreachable; retrying in background"
+msgid "Remote station: Remote unreachable; retrying in background"
 msgstr ""
 
 msgid "Port 8080 is reserved for firmware update. Please choose another HTTP port."
